@@ -1,0 +1,1 @@
+integer x = 6; /* test */./scanner test.txt
