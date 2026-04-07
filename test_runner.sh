@@ -1,31 +1,30 @@
 #!/bin/bash
 
-# Define colors for output
+# Renk kodları
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== Building B-Minor Scanner ===${NC}"
+echo -e "${BLUE}=== B-Minor Derleyicisi Derleniyor ===${NC}"
 make
 
-echo -e "\n${BLUE}=== Running Automated Tests ===${NC}"
+echo -e "\n${BLUE}=== Otomatik Testler Basliyor ===${NC}"
 
-# Check if tests directory exists
 if [ ! -d "tests" ]; then
-  echo "Creating 'tests' directory..."
   mkdir tests
-  echo "Please put your .bminor test files inside the 'tests' directory!"
-  exit 1
 fi
 
-# Loop through all .bminor files in the tests folder
+# tests klasöründeki tüm .bminor dosyalarını bul
 for test_file in tests/*.bminor; do
-    # Skip if no files are found
     [ -e "$test_file" ] || continue 
     
-    echo -e "${GREEN}--> Testing: $test_file${NC}"
-    ./scanner "$test_file"
-    echo "------------------------------------------------"
+    echo -e "\n${BLUE}------------------------------------------------${NC}"
+    echo -e "Test Edilen Dosya: ${GREEN}$test_file${NC}"
+    
+    # Yeni derleyicimiz bminor'u çalıştır
+    ./bminor "$test_file"
 done
 
-echo "All tests finished!"
+echo -e "\n${BLUE}------------------------------------------------${NC}"
+echo "Tum testler tamamlandi!"

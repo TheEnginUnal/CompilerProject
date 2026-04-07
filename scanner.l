@@ -1,142 +1,89 @@
-/* --- 1. DEFINITIONS SECTION --- */
 %{
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/* Bison'un ürettiği Jeton kimliklerini (Token ID) içeren başlık dosyasını dahil ediyoruz! */
+#include "parser.tab.h"
 
-/* Buffer for the rule: Strings in B-Minor can be a maximum of 256 characters */
 char string_buffer[257]; 
 int string_length = 0;
 int line_num = 1;
 %}
 
-/* Flex options */
 %option noyywrap
 %option yylineno
+%option nounput
+%option noinput
 
-/* Macros for B-Minor Rules */
 DIGIT      [0-9]
 LETTER     [a-zA-Z]
 IDENTIFIER [a-zA-Z_][a-zA-Z0-9_]*
 
-/* Exclusive states for multi-line comments and strings */
 %x COMMENT_STATE
 %x STRING_STATE
 
 %%
- /* --- 2. RULES & ACTIONS SECTION --- */
- 
 
- /* A2.1: Whitespace - Tabs, spaces, linefeed, and carriage return are ignored */
 [ \t\r]+    { /* Do nothing */ }
 \n          { line_num++; }
 
- /* A2.3: B-Minor Keywords */
-"array"     { printf("KEYWORD: array\n"); }
-"boolean"   { printf("KEYWORD: boolean\n"); }
-"char"      { printf("KEYWORD: char\n"); }
-"else"      { printf("KEYWORD: else\n"); }
-"false"     { printf("KEYWORD: false\n"); }
-"for"       { printf("KEYWORD: for\n"); }
-"function"  { printf("KEYWORD: function\n"); }
-"if"        { printf("KEYWORD: if\n"); }
-"integer"   { printf("KEYWORD: integer\n"); }
-"print"     { printf("KEYWORD: print\n"); }
-"return"    { printf("KEYWORD: return\n"); }
-"string"    { printf("KEYWORD: string\n"); }
-"true"      { printf("KEYWORD: true\n"); }
-"void"      { printf("KEYWORD: void\n"); }
-"while"     { printf("KEYWORD: while\n"); }
+"array"     { return TOKEN_ARRAY; }
+"boolean"   { return TOKEN_BOOLEAN; }
+"char"      { return TOKEN_CHAR; }
+"else"      { return TOKEN_ELSE; }
+"false"     { return TOKEN_FALSE; }
+"for"       { return TOKEN_FOR; }
+"function"  { return TOKEN_FUNCTION; }
+"if"        { return TOKEN_IF; }
+"integer"   { return TOKEN_INTEGER; }
+"print"     { return TOKEN_PRINT; }
+"return"    { return TOKEN_RETURN; }
+"string"    { return TOKEN_STRING; }
+"true"      { return TOKEN_TRUE; }
+"void"      { return TOKEN_VOID; }
+"while"     { return TOKEN_WHILE; }
 
- /* A4.1: Operators and Punctuation (Boşluksuz şekilde gruplandırıldı) */
-[\[\](){}]  { printf("BRACKET: %s\n", yytext); }
-"++"        { printf("OPERATOR (Increment): ++\n"); }
-"--"        { printf("OPERATOR (Decrement): --\n"); }
-"=="        { printf("OPERATOR (Equality): ==\n"); }
-"!="        { printf("OPERATOR (Inequality): !=\n"); }
-"<="        { printf("OPERATOR (Less or Equal): <=\n"); }
-">="        { printf("OPERATOR (Greater or Equal): >=\n"); }
-"&&"        { printf("OPERATOR (Logical AND): &&\n"); }
-"||"        { printf("OPERATOR (Logical OR): ||\n"); }
-[<>\+\-\*/\%\^\!\=] { printf("OPERATOR: %s\n", yytext); }
-":"         { printf("TYPE DECLARATION: :\n"); }
-";"         { printf("STATEMENT END: ;\n"); }
-","         { printf("COMMA: ,\n"); }
+"++"        { return TOKEN_INCREMENT; }
+"--"        { return TOKEN_DECREMENT; }
+"=="        { return TOKEN_EQUALITY; }
+"!="        { return TOKEN_INEQUALITY; }
+"<="        { return TOKEN_LESS_EQUAL; }
+">="        { return TOKEN_GREATER_EQUAL; }
+"&&"        { return TOKEN_LOGICAL_AND; }
+"||"        { return TOKEN_LOGICAL_OR; }
 
- /* A3.2: Character Literal - Single quotes */
-\'[^\'\\]\' { printf("CHAR: %s\n", yytext); }
-\'\\n\'     { printf("CHAR (Escape): \\n\n"); }
-\'\\0\'     { printf("CHAR (Escape): \\0\n"); }
+ /* Tek karakterlik sembolleri ASCII değerleriyle doğrudan Bison'a döndürebiliriz */
+[\[\](){}<>\+\-\*/\%\^\!\=\:\;\,] { return yytext[0]; }
 
- /* A2.2: Identifiers */
-{IDENTIFIER} { 
-    /* A3.3: Identifiers may be up to 256 characters long */
-    if (yyleng > 256) {
-        printf("ERROR: Identifier exceeds 256 characters! Line: %d\n", line_num);
-    } else {
-        printf("IDENTIFIER: %s\n", yytext); 
-    }
-}
+\'[^\'\\]\' { return TOKEN_CHAR_LITERAL; }
+\'\\n\'     { return TOKEN_CHAR_LITERAL; }
+\'\\0\'     { return TOKEN_CHAR_LITERAL; }
 
- /* A3.2: Integers */
-{DIGIT}+    { printf("INTEGER: %s\n", yytext); }
+{IDENTIFIER} { return TOKEN_IDENTIFIER; }
+{DIGIT}+    { return TOKEN_INT_LITERAL; }
 
- /* A2.1: Single-line Comments (C++ Style) */
 "//".* { /* Ignore single-line comment */ }
 
- /* A2.1: Multi-line Comments (C Style) */
 "/*"        { BEGIN(COMMENT_STATE); }
-<COMMENT_STATE>.|\n { 
-    if (yytext[0] == '\n') line_num++; 
-}
+<COMMENT_STATE>.|\n { if (yytext[0] == '\n') line_num++; }
 <COMMENT_STATE>"*/" { BEGIN(INITIAL); }
 
- /* A3.2 & A3.3: Strings */
-\"          { 
-    string_length = 0; 
-    string_buffer[0] = '\0'; 
-    BEGIN(STRING_STATE); 
-}
-<STRING_STATE>\" { 
-    BEGIN(INITIAL);
-    printf("STRING: \"%s\"\n", string_buffer);
-}
-<STRING_STATE>\\n { 
-    if(string_length < 256) { string_buffer[string_length++] = '\n'; string_buffer[string_length] = '\0'; }
-}
-<STRING_STATE>\\0 { 
-    if(string_length < 256) { string_buffer[string_length++] = '\0'; string_buffer[string_length] = '\0'; }
-}
-<STRING_STATE>\\\" { 
-    if(string_length < 256) { string_buffer[string_length++] = '\"'; string_buffer[string_length] = '\0'; }
-}
-<STRING_STATE>\\\\ { 
-    if(string_length < 256) { string_buffer[string_length++] = '\\'; string_buffer[string_length] = '\0'; }
-}
+\"          { string_length = 0; string_buffer[0] = '\0'; BEGIN(STRING_STATE); }
+<STRING_STATE>\" { BEGIN(INITIAL); return TOKEN_STRING_LITERAL; }
+<STRING_STATE>\\n { if(string_length < 256) { string_buffer[string_length++] = '\n'; string_buffer[string_length] = '\0'; } }
+<STRING_STATE>\\0 { if(string_length < 256) { string_buffer[string_length++] = '\0'; string_buffer[string_length] = '\0'; } }
+<STRING_STATE>\\\" { if(string_length < 256) { string_buffer[string_length++] = '\"'; string_buffer[string_length] = '\0'; } }
+<STRING_STATE>\\\\ { if(string_length < 256) { string_buffer[string_length++] = '\\'; string_buffer[string_length] = '\0'; } }
 <STRING_STATE>. { 
     if(string_length < 256) { 
         string_buffer[string_length++] = yytext[0]; 
         string_buffer[string_length] = '\0'; 
     } else {
-        printf("ERROR: String exceeds 256 characters! Line: %d\n", line_num);
-        BEGIN(INITIAL); /* Recover from error by returning to initial state */
+        BEGIN(INITIAL); 
     }
 }
 
- /* Error Handling: Unknown characters */
-.           { printf("ERROR: Unknown character '%s' at Line: %d\n", yytext, line_num); }
+. { printf("Lexical Error: Unknown character '%s' at Line: %d\n", yytext, line_num); }
 
 %%
-/* --- 3. USER CODE SECTION --- */
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        FILE *file = fopen(argv[1], "r");
-        if (!file) {
-            fprintf(stderr, "Could not open file: %s\n", argv[1]);
-            return 1;
-        }
-        yyin = file;
-    }
-    yylex();
-    return 0;
-}
+/* main() fonksiyonunu parser.y dosyasına taşıdığımız için burayı tamamen boş bıraktık. */

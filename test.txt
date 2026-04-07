@@ -1,1 +1,1 @@
-integer x = 6; /* test */./scanner test.txt
+string x = "ssss"; /* test */./scanner test.txt

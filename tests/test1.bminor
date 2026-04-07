@@ -1,0 +1,12 @@
+// B-Minor Tarayici (Scanner) Testi 1
+integer x = 50;
+string mesaj = "Test!";
+
+/*
+  Cok satirli
+  yorum testi
+*/
+
+if (x >= 50) {
+    print mesaj;
+}
