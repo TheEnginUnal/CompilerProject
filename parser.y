@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "scope.h"
+#include "resolve.h"
 
 extern int yylex();
 extern int line_num;
@@ -173,15 +175,26 @@ int main(int argc, char **argv) {
     }
     
     printf("=== Starting B-Minor Compiler ===\n");
-   if (yyparse() == 0) {
+    if (yyparse() == 0) {
         printf("--- AST BUILT SUCCESSFULLY ---\n\n");
-        printf("=== AST PRETTY PRINT OUTPUT ===\n");
-        /* Start printing the tree from the root with 0 indentation */
-        stmt_print(parser_result, 0); 
-        printf("===============================\n");
+        
+        printf("=== STARTING NAME RESOLUTION ===\n");
+        scope_enter(); /* Create the global scope */
+        
+        /* Send the root of the tree into the resolver */
+        stmt_resolve(parser_result);
+        
+        scope_exit();  /* Destroy the global scope */
+        
+        if (resolve_error_count == 0) {
+            printf("\n--- RESOLUTION SUCCESSFUL ---\n");
+        } else {
+            printf("\n--- RESOLUTION FAILED WITH %d ERRORS ---\n", resolve_error_count);
+        }
     } else {
         printf("--- PARSE FAILED ---\n");
     }
+   
     
     return 0;
 }

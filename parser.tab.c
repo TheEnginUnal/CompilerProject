@@ -73,6 +73,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "scope.h"
+#include "resolve.h"
 
 extern int yylex();
 extern int line_num;
@@ -83,7 +85,7 @@ void yyerror(const char *s);
 /* The root of our Abstract Syntax Tree */
 struct stmt *parser_result = NULL;
 
-#line 87 "parser.tab.c"
+#line 89 "parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -556,11 +558,11 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    62,    62,    63,    78,    79,    84,    87,    88,    89,
-      90,    91,    96,    99,   105,   109,   116,   117,   118,   119,
-     120,   124,   125,   129,   130,   134,   135,   136,   137,   138,
-     139,   140,   141,   142,   143,   144,   145,   146,   147,   148,
-     149,   150,   151,   152
+       0,    64,    64,    65,    80,    81,    86,    89,    90,    91,
+      92,    93,    98,   101,   107,   111,   118,   119,   120,   121,
+     122,   126,   127,   131,   132,   136,   137,   138,   139,   140,
+     141,   142,   143,   144,   145,   146,   147,   148,   149,   150,
+     151,   152,   153,   154
 };
 #endif
 
@@ -1205,13 +1207,13 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: %empty  */
-#line 62 "parser.y"
+#line 64 "parser.y"
                   { parser_result = NULL; (yyval.stmt) = NULL; }
-#line 1211 "parser.tab.c"
+#line 1213 "parser.tab.c"
     break;
 
   case 3: /* program: program statement  */
-#line 63 "parser.y"
+#line 65 "parser.y"
                         { 
         if ((yyvsp[-1].stmt) == NULL) {
             parser_result = (yyvsp[0].stmt);
@@ -1223,266 +1225,266 @@ yyreduce:
         }
         (yyval.stmt) = parser_result;
     }
-#line 1227 "parser.tab.c"
+#line 1229 "parser.tab.c"
     break;
 
   case 4: /* statement: matched_if  */
-#line 78 "parser.y"
+#line 80 "parser.y"
                  { (yyval.stmt) = (yyvsp[0].stmt); }
-#line 1233 "parser.tab.c"
+#line 1235 "parser.tab.c"
     break;
 
   case 5: /* statement: unmatched_if  */
-#line 79 "parser.y"
+#line 81 "parser.y"
                    { (yyval.stmt) = (yyvsp[0].stmt); }
-#line 1239 "parser.tab.c"
+#line 1241 "parser.tab.c"
     break;
 
   case 6: /* matched_if: TOKEN_IF '(' expr ')' matched_if TOKEN_ELSE matched_if  */
-#line 84 "parser.y"
+#line 86 "parser.y"
                                                              { 
           (yyval.stmt) = stmt_create(STMT_IF_ELSE, NULL, NULL, (yyvsp[-4].expr), NULL, (yyvsp[-2].stmt), (yyvsp[0].stmt), NULL); 
       }
-#line 1247 "parser.tab.c"
+#line 1249 "parser.tab.c"
     break;
 
   case 7: /* matched_if: expr ';'  */
-#line 87 "parser.y"
+#line 89 "parser.y"
                { (yyval.stmt) = stmt_create(STMT_EXPR, NULL, NULL, (yyvsp[-1].expr), NULL, NULL, NULL, NULL); }
-#line 1253 "parser.tab.c"
+#line 1255 "parser.tab.c"
     break;
 
   case 8: /* matched_if: declaration  */
-#line 88 "parser.y"
+#line 90 "parser.y"
                   { (yyval.stmt) = stmt_create(STMT_DECL, (yyvsp[0].decl), NULL, NULL, NULL, NULL, NULL, NULL); }
-#line 1259 "parser.tab.c"
+#line 1261 "parser.tab.c"
     break;
 
   case 9: /* matched_if: TOKEN_PRINT expr ';'  */
-#line 89 "parser.y"
+#line 91 "parser.y"
                            { (yyval.stmt) = stmt_create(STMT_PRINT, NULL, NULL, (yyvsp[-1].expr), NULL, NULL, NULL, NULL); }
-#line 1265 "parser.tab.c"
+#line 1267 "parser.tab.c"
     break;
 
   case 10: /* matched_if: TOKEN_RETURN expr ';'  */
-#line 90 "parser.y"
+#line 92 "parser.y"
                             { (yyval.stmt) = stmt_create(STMT_RETURN, NULL, NULL, (yyvsp[-1].expr), NULL, NULL, NULL, NULL); }
-#line 1271 "parser.tab.c"
+#line 1273 "parser.tab.c"
     break;
 
   case 11: /* matched_if: block_statement  */
-#line 91 "parser.y"
+#line 93 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].stmt); }
-#line 1277 "parser.tab.c"
+#line 1279 "parser.tab.c"
     break;
 
   case 12: /* unmatched_if: TOKEN_IF '(' expr ')' statement  */
-#line 96 "parser.y"
+#line 98 "parser.y"
                                                             { 
           (yyval.stmt) = stmt_create(STMT_IF_ELSE, NULL, NULL, (yyvsp[-2].expr), NULL, (yyvsp[0].stmt), NULL, NULL); 
       }
-#line 1285 "parser.tab.c"
+#line 1287 "parser.tab.c"
     break;
 
   case 13: /* unmatched_if: TOKEN_IF '(' expr ')' matched_if TOKEN_ELSE unmatched_if  */
-#line 99 "parser.y"
+#line 101 "parser.y"
                                                                { 
           (yyval.stmt) = stmt_create(STMT_IF_ELSE, NULL, NULL, (yyvsp[-4].expr), NULL, (yyvsp[-2].stmt), (yyvsp[0].stmt), NULL); 
       }
-#line 1293 "parser.tab.c"
+#line 1295 "parser.tab.c"
     break;
 
   case 14: /* declaration: TOKEN_IDENTIFIER ':' type ';'  */
-#line 105 "parser.y"
+#line 107 "parser.y"
                                     { 
           (yyval.decl) = decl_create((yyvsp[-3].name), (yyvsp[-1].type), NULL, NULL, NULL); 
           free((yyvsp[-3].name));
       }
-#line 1302 "parser.tab.c"
+#line 1304 "parser.tab.c"
     break;
 
   case 15: /* declaration: TOKEN_IDENTIFIER ':' type '=' expr ';'  */
-#line 109 "parser.y"
+#line 111 "parser.y"
                                              { 
           (yyval.decl) = decl_create((yyvsp[-5].name), (yyvsp[-3].type), (yyvsp[-1].expr), NULL, NULL); 
           free((yyvsp[-5].name));
       }
-#line 1311 "parser.tab.c"
+#line 1313 "parser.tab.c"
     break;
 
   case 16: /* type: TOKEN_INTEGER  */
-#line 116 "parser.y"
+#line 118 "parser.y"
                     { (yyval.type) = type_create(TYPE_INTEGER, NULL); }
-#line 1317 "parser.tab.c"
+#line 1319 "parser.tab.c"
     break;
 
   case 17: /* type: TOKEN_BOOLEAN  */
-#line 117 "parser.y"
+#line 119 "parser.y"
                     { (yyval.type) = type_create(TYPE_BOOLEAN, NULL); }
-#line 1323 "parser.tab.c"
+#line 1325 "parser.tab.c"
     break;
 
   case 18: /* type: TOKEN_CHAR  */
-#line 118 "parser.y"
+#line 120 "parser.y"
                     { (yyval.type) = type_create(TYPE_CHAR, NULL); }
-#line 1329 "parser.tab.c"
+#line 1331 "parser.tab.c"
     break;
 
   case 19: /* type: TOKEN_STRING  */
-#line 119 "parser.y"
+#line 121 "parser.y"
                     { (yyval.type) = type_create(TYPE_STRING, NULL); }
-#line 1335 "parser.tab.c"
+#line 1337 "parser.tab.c"
     break;
 
   case 20: /* type: TOKEN_VOID  */
-#line 120 "parser.y"
+#line 122 "parser.y"
                     { (yyval.type) = type_create(TYPE_VOID, NULL); }
-#line 1341 "parser.tab.c"
+#line 1343 "parser.tab.c"
     break;
 
   case 21: /* block_statement: '{' statement_list '}'  */
-#line 124 "parser.y"
+#line 126 "parser.y"
                              { (yyval.stmt) = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, (yyvsp[-1].stmt), NULL, NULL); }
-#line 1347 "parser.tab.c"
+#line 1349 "parser.tab.c"
     break;
 
   case 22: /* block_statement: '{' '}'  */
-#line 125 "parser.y"
+#line 127 "parser.y"
               { (yyval.stmt) = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL); }
-#line 1353 "parser.tab.c"
+#line 1355 "parser.tab.c"
     break;
 
   case 23: /* statement_list: statement  */
-#line 129 "parser.y"
+#line 131 "parser.y"
                 { (yyval.stmt) = (yyvsp[0].stmt); }
-#line 1359 "parser.tab.c"
+#line 1361 "parser.tab.c"
     break;
 
   case 24: /* statement_list: statement statement_list  */
-#line 130 "parser.y"
+#line 132 "parser.y"
                                { (yyvsp[-1].stmt)->next = (yyvsp[0].stmt); (yyval.stmt) = (yyvsp[-1].stmt); }
-#line 1365 "parser.tab.c"
+#line 1367 "parser.tab.c"
     break;
 
   case 25: /* expr: TOKEN_INT_LITERAL  */
-#line 134 "parser.y"
+#line 136 "parser.y"
                         { (yyval.expr) = expr_create_integer_literal(atoi((yyvsp[0].name))); free((yyvsp[0].name)); }
-#line 1371 "parser.tab.c"
+#line 1373 "parser.tab.c"
     break;
 
   case 26: /* expr: TOKEN_STRING_LITERAL  */
-#line 135 "parser.y"
+#line 137 "parser.y"
                            { (yyval.expr) = expr_create_string_literal((yyvsp[0].name)); free((yyvsp[0].name)); }
-#line 1377 "parser.tab.c"
+#line 1379 "parser.tab.c"
     break;
 
   case 27: /* expr: TOKEN_TRUE  */
-#line 136 "parser.y"
+#line 138 "parser.y"
                  { (yyval.expr) = expr_create_boolean_literal(1); }
-#line 1383 "parser.tab.c"
+#line 1385 "parser.tab.c"
     break;
 
   case 28: /* expr: TOKEN_FALSE  */
-#line 137 "parser.y"
+#line 139 "parser.y"
                   { (yyval.expr) = expr_create_boolean_literal(0); }
-#line 1389 "parser.tab.c"
+#line 1391 "parser.tab.c"
     break;
 
   case 29: /* expr: TOKEN_IDENTIFIER  */
-#line 138 "parser.y"
+#line 140 "parser.y"
                        { (yyval.expr) = expr_create_name((yyvsp[0].name)); free((yyvsp[0].name)); }
-#line 1395 "parser.tab.c"
+#line 1397 "parser.tab.c"
     break;
 
   case 30: /* expr: '(' expr ')'  */
-#line 139 "parser.y"
+#line 141 "parser.y"
                    { (yyval.expr) = (yyvsp[-1].expr); }
-#line 1401 "parser.tab.c"
+#line 1403 "parser.tab.c"
     break;
 
   case 31: /* expr: expr '+' expr  */
-#line 140 "parser.y"
+#line 142 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_ADD, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1407 "parser.tab.c"
+#line 1409 "parser.tab.c"
     break;
 
   case 32: /* expr: expr '-' expr  */
-#line 141 "parser.y"
+#line 143 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_SUB, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1413 "parser.tab.c"
+#line 1415 "parser.tab.c"
     break;
 
   case 33: /* expr: expr '*' expr  */
-#line 142 "parser.y"
+#line 144 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_MUL, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1419 "parser.tab.c"
+#line 1421 "parser.tab.c"
     break;
 
   case 34: /* expr: expr '/' expr  */
-#line 143 "parser.y"
+#line 145 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1425 "parser.tab.c"
+#line 1427 "parser.tab.c"
     break;
 
   case 35: /* expr: expr '%' expr  */
-#line 144 "parser.y"
+#line 146 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_MOD, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1431 "parser.tab.c"
+#line 1433 "parser.tab.c"
     break;
 
   case 36: /* expr: expr '^' expr  */
-#line 145 "parser.y"
+#line 147 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_EXP, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1437 "parser.tab.c"
+#line 1439 "parser.tab.c"
     break;
 
   case 37: /* expr: expr TOKEN_EQUALITY expr  */
-#line 146 "parser.y"
+#line 148 "parser.y"
                                { (yyval.expr) = expr_create(EXPR_EQUAL, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1443 "parser.tab.c"
+#line 1445 "parser.tab.c"
     break;
 
   case 38: /* expr: expr TOKEN_INEQUALITY expr  */
-#line 147 "parser.y"
+#line 149 "parser.y"
                                  { (yyval.expr) = expr_create(EXPR_NOT_EQUAL, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1449 "parser.tab.c"
+#line 1451 "parser.tab.c"
     break;
 
   case 39: /* expr: expr '<' expr  */
-#line 148 "parser.y"
+#line 150 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_LESS, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1455 "parser.tab.c"
+#line 1457 "parser.tab.c"
     break;
 
   case 40: /* expr: expr '>' expr  */
-#line 149 "parser.y"
+#line 151 "parser.y"
                     { (yyval.expr) = expr_create(EXPR_GREATER, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1461 "parser.tab.c"
+#line 1463 "parser.tab.c"
     break;
 
   case 41: /* expr: expr TOKEN_LOGICAL_AND expr  */
-#line 150 "parser.y"
+#line 152 "parser.y"
                                   { (yyval.expr) = expr_create(EXPR_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1467 "parser.tab.c"
+#line 1469 "parser.tab.c"
     break;
 
   case 42: /* expr: expr TOKEN_LOGICAL_OR expr  */
-#line 151 "parser.y"
+#line 153 "parser.y"
                                  { (yyval.expr) = expr_create(EXPR_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1473 "parser.tab.c"
+#line 1475 "parser.tab.c"
     break;
 
   case 43: /* expr: TOKEN_IDENTIFIER '=' expr  */
-#line 152 "parser.y"
+#line 154 "parser.y"
                                 { 
           (yyval.expr) = expr_create(EXPR_ASSIGN, expr_create_name((yyvsp[-2].name)), (yyvsp[0].expr)); 
           free((yyvsp[-2].name)); 
       }
-#line 1482 "parser.tab.c"
+#line 1484 "parser.tab.c"
     break;
 
 
-#line 1486 "parser.tab.c"
+#line 1488 "parser.tab.c"
 
       default: break;
     }
@@ -1675,7 +1677,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 158 "parser.y"
+#line 160 "parser.y"
 
 /* --- USER CODE --- */
 
@@ -1694,15 +1696,26 @@ int main(int argc, char **argv) {
     }
     
     printf("=== Starting B-Minor Compiler ===\n");
-   if (yyparse() == 0) {
+    if (yyparse() == 0) {
         printf("--- AST BUILT SUCCESSFULLY ---\n\n");
-        printf("=== AST PRETTY PRINT OUTPUT ===\n");
-        /* Start printing the tree from the root with 0 indentation */
-        stmt_print(parser_result, 0); 
-        printf("===============================\n");
+        
+        printf("=== STARTING NAME RESOLUTION ===\n");
+        scope_enter(); /* Create the global scope */
+        
+        /* Send the root of the tree into the resolver */
+        stmt_resolve(parser_result);
+        
+        scope_exit();  /* Destroy the global scope */
+        
+        if (resolve_error_count == 0) {
+            printf("\n--- RESOLUTION SUCCESSFUL ---\n");
+        } else {
+            printf("\n--- RESOLUTION FAILED WITH %d ERRORS ---\n", resolve_error_count);
+        }
     } else {
         printf("--- PARSE FAILED ---\n");
     }
+   
     
     return 0;
 }
