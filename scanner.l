@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/* Bison'un ürettiği Jeton kimliklerini (Token ID) içeren başlık dosyasını dahil ediyoruz! */
+
 #include "parser.tab.h"
 
 char string_buffer[257]; 
@@ -59,17 +59,21 @@ IDENTIFIER [a-zA-Z_][a-zA-Z0-9_]*
 \'\\n\'     { return TOKEN_CHAR_LITERAL; }
 \'\\0\'     { return TOKEN_CHAR_LITERAL; }
 
-{IDENTIFIER} { return TOKEN_IDENTIFIER; }
-{DIGIT}+    { return TOKEN_INT_LITERAL; }
+{IDENTIFIER} { 
+    yylval.name = strdup(yytext); 
+    return TOKEN_IDENTIFIER; 
+}
 
-"//".* { /* Ignore single-line comment */ }
+{DIGIT}+ { 
+    yylval.name = strdup(yytext); 
+    return TOKEN_INT_LITERAL; 
+}
 
-"/*"        { BEGIN(COMMENT_STATE); }
-<COMMENT_STATE>.|\n { if (yytext[0] == '\n') line_num++; }
-<COMMENT_STATE>"*/" { BEGIN(INITIAL); }
-
-\"          { string_length = 0; string_buffer[0] = '\0'; BEGIN(STRING_STATE); }
-<STRING_STATE>\" { BEGIN(INITIAL); return TOKEN_STRING_LITERAL; }
+<STRING_STATE>\" { 
+    BEGIN(INITIAL);
+    yylval.name = strdup(string_buffer);
+    return TOKEN_STRING_LITERAL; 
+}
 <STRING_STATE>\\n { if(string_length < 256) { string_buffer[string_length++] = '\n'; string_buffer[string_length] = '\0'; } }
 <STRING_STATE>\\0 { if(string_length < 256) { string_buffer[string_length++] = '\0'; string_buffer[string_length] = '\0'; } }
 <STRING_STATE>\\\" { if(string_length < 256) { string_buffer[string_length++] = '\"'; string_buffer[string_length] = '\0'; } }

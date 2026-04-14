@@ -54,25 +54,25 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    TOKEN_ARRAY = 258,             /* TOKEN_ARRAY  */
-    TOKEN_BOOLEAN = 259,           /* TOKEN_BOOLEAN  */
-    TOKEN_CHAR = 260,              /* TOKEN_CHAR  */
-    TOKEN_ELSE = 261,              /* TOKEN_ELSE  */
-    TOKEN_FALSE = 262,             /* TOKEN_FALSE  */
-    TOKEN_FOR = 263,               /* TOKEN_FOR  */
-    TOKEN_FUNCTION = 264,          /* TOKEN_FUNCTION  */
-    TOKEN_IF = 265,                /* TOKEN_IF  */
-    TOKEN_INTEGER = 266,           /* TOKEN_INTEGER  */
-    TOKEN_PRINT = 267,             /* TOKEN_PRINT  */
-    TOKEN_RETURN = 268,            /* TOKEN_RETURN  */
-    TOKEN_STRING = 269,            /* TOKEN_STRING  */
-    TOKEN_TRUE = 270,              /* TOKEN_TRUE  */
-    TOKEN_VOID = 271,              /* TOKEN_VOID  */
-    TOKEN_WHILE = 272,             /* TOKEN_WHILE  */
-    TOKEN_IDENTIFIER = 273,        /* TOKEN_IDENTIFIER  */
-    TOKEN_INT_LITERAL = 274,       /* TOKEN_INT_LITERAL  */
-    TOKEN_STRING_LITERAL = 275,    /* TOKEN_STRING_LITERAL  */
-    TOKEN_CHAR_LITERAL = 276,      /* TOKEN_CHAR_LITERAL  */
+    TOKEN_IDENTIFIER = 258,        /* TOKEN_IDENTIFIER  */
+    TOKEN_INT_LITERAL = 259,       /* TOKEN_INT_LITERAL  */
+    TOKEN_STRING_LITERAL = 260,    /* TOKEN_STRING_LITERAL  */
+    TOKEN_CHAR_LITERAL = 261,      /* TOKEN_CHAR_LITERAL  */
+    TOKEN_ARRAY = 262,             /* TOKEN_ARRAY  */
+    TOKEN_BOOLEAN = 263,           /* TOKEN_BOOLEAN  */
+    TOKEN_CHAR = 264,              /* TOKEN_CHAR  */
+    TOKEN_ELSE = 265,              /* TOKEN_ELSE  */
+    TOKEN_FALSE = 266,             /* TOKEN_FALSE  */
+    TOKEN_FOR = 267,               /* TOKEN_FOR  */
+    TOKEN_FUNCTION = 268,          /* TOKEN_FUNCTION  */
+    TOKEN_IF = 269,                /* TOKEN_IF  */
+    TOKEN_INTEGER = 270,           /* TOKEN_INTEGER  */
+    TOKEN_PRINT = 271,             /* TOKEN_PRINT  */
+    TOKEN_RETURN = 272,            /* TOKEN_RETURN  */
+    TOKEN_STRING = 273,            /* TOKEN_STRING  */
+    TOKEN_TRUE = 274,              /* TOKEN_TRUE  */
+    TOKEN_VOID = 275,              /* TOKEN_VOID  */
+    TOKEN_WHILE = 276,             /* TOKEN_WHILE  */
     TOKEN_INCREMENT = 277,         /* TOKEN_INCREMENT  */
     TOKEN_DECREMENT = 278,         /* TOKEN_DECREMENT  */
     TOKEN_EQUALITY = 279,          /* TOKEN_EQUALITY  */
@@ -88,7 +88,20 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+union YYSTYPE
+{
+#line 18 "parser.y"
+
+    struct decl *decl;
+    struct stmt *stmt;
+    struct expr *expr;
+    struct type *type;
+    char *name; /* Receives string values from Flex */
+
+#line 102 "parser.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
