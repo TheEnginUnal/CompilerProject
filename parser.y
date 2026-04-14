@@ -5,6 +5,7 @@
 #include "ast.h"
 #include "scope.h"
 #include "resolve.h"
+#include "typecheck.h"
 
 extern int yylex();
 extern int line_num;
@@ -175,26 +176,37 @@ int main(int argc, char **argv) {
     }
     
     printf("=== Starting B-Minor Compiler ===\n");
+    
+    /* PHASE 1 & 2: Scanning & Parsing */
     if (yyparse() == 0) {
         printf("--- AST BUILT SUCCESSFULLY ---\n\n");
         
+        /* PHASE 3: Name Resolution */
         printf("=== STARTING NAME RESOLUTION ===\n");
-        scope_enter(); /* Create the global scope */
-        
-        /* Send the root of the tree into the resolver */
+        scope_enter(); /* Global scope */
         stmt_resolve(parser_result);
-        
-        scope_exit();  /* Destroy the global scope */
+        scope_exit();
         
         if (resolve_error_count == 0) {
-            printf("\n--- RESOLUTION SUCCESSFUL ---\n");
+            printf("\n--- RESOLUTION SUCCESSFUL ---\n\n");
+            
+            /* PHASE 4: Type Checking */
+            printf("=== STARTING TYPE CHECKING ===\n");
+            stmt_typecheck(parser_result);
+            
+            if (type_error_count == 0) {
+                printf("\n--- TYPE CHECK SUCCESSFUL ---\n");
+            } else {
+                printf("\n--- TYPE CHECK FAILED WITH %d ERRORS ---\n", type_error_count);
+            }
+            
         } else {
             printf("\n--- RESOLUTION FAILED WITH %d ERRORS ---\n", resolve_error_count);
         }
     } else {
-        printf("--- PARSE FAILED ---\n");
+        /* If parsing fails, it NEVER runs resolve or typecheck! */
+        printf("--- PARSE FAILED ---\n"); 
     }
-   
     
     return 0;
 }

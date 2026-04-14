@@ -20,7 +20,7 @@ LETTER     [a-zA-Z]
 IDENTIFIER [a-zA-Z_][a-zA-Z0-9_]*
 
 %x COMMENT_STATE
-%x STRING_STATE
+
 
 %%
 
@@ -69,25 +69,13 @@ IDENTIFIER [a-zA-Z_][a-zA-Z0-9_]*
     return TOKEN_INT_LITERAL; 
 }
 
-<STRING_STATE>\" { 
-    BEGIN(INITIAL);
-    yylval.name = strdup(string_buffer);
-    return TOKEN_STRING_LITERAL; 
-}
-<STRING_STATE>\\n { if(string_length < 256) { string_buffer[string_length++] = '\n'; string_buffer[string_length] = '\0'; } }
-<STRING_STATE>\\0 { if(string_length < 256) { string_buffer[string_length++] = '\0'; string_buffer[string_length] = '\0'; } }
-<STRING_STATE>\\\" { if(string_length < 256) { string_buffer[string_length++] = '\"'; string_buffer[string_length] = '\0'; } }
-<STRING_STATE>\\\\ { if(string_length < 256) { string_buffer[string_length++] = '\\'; string_buffer[string_length] = '\0'; } }
-<STRING_STATE>. { 
-    if(string_length < 256) { 
-        string_buffer[string_length++] = yytext[0]; 
-        string_buffer[string_length] = '\0'; 
-    } else {
-        BEGIN(INITIAL); 
-    }
+\"[^\"]*\" {
+    /* Strip the leading and trailing quotes before sending to AST */
+    yytext[yyleng-1] = '\0';
+    yylval.name = strdup(yytext + 1);
+    return TOKEN_STRING_LITERAL;
 }
 
 . { printf("Lexical Error: Unknown character '%s' at Line: %d\n", yytext, line_num); }
 
 %%
-/* main() fonksiyonunu parser.y dosyasına taşıdığımız için burayı tamamen boş bıraktık. */

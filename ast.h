@@ -49,6 +49,7 @@ struct expr {
     const char *name;
     int integer_value;
     const char *string_literal;
+    struct symbol *symbol;
 };
 
 /* --- STATEMENTS --- */
@@ -80,6 +81,7 @@ struct decl {
     struct expr *value;
     struct stmt *code;
     struct decl *next;
+    struct symbol *symbol;
 };
 
 /* --- FUNCTION PROTOTYPES (CONSTRUCTORS) --- */
@@ -95,6 +97,7 @@ struct expr * expr_create_string_literal(const char *str);
 struct stmt * stmt_create(stmt_kind_t kind, struct decl *decl, struct expr *init_expr, struct expr *expr, struct expr *next_expr, struct stmt *body, struct stmt *else_body, struct stmt *next);
 
 struct decl * decl_create(const char *name, struct type *type, struct expr *value, struct stmt *code, struct decl *next);
+
 
 
 /* --- PRINT FUNCTIONS (PRETTY PRINTER) --- */

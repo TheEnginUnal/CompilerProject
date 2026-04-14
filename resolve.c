@@ -18,6 +18,10 @@ void expr_resolve(struct expr *e) {
         } else {
             /* Variable found! The compiler is happy. */
             printf("Resolved: Variable '%s' is valid.\n", e->name);
+
+            /* Variable found! Bind the symbol to the AST node! */
+            e->symbol = sym; 
+            printf("Resolved: Variable '%s' is valid.\n", e->name);
         }
     } else {
         /* Recursively check left and right sides of math/logic operations */
@@ -38,6 +42,7 @@ void decl_resolve(struct decl *d) {
         /* Create a new symbol and bind it to the dictionary */
         symbol_t kind = (scope_level() > 0) ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
         sym = symbol_create(kind, d->type, d->name);
+        d->symbol = sym;
         scope_bind(d->name, sym);
         printf("Declared: '%s' added to Scope Level %d\n", d->name, scope_level());
     }
