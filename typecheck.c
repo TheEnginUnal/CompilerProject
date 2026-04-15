@@ -7,6 +7,7 @@ int type_error_count = 0;
 
 /* Check if two types are the exact same */
 int type_equals(struct type *a, struct type *b) {
+    if (!a || !b) return 0;
     if (a->kind == b->kind) return 1;
     return 0;
 }
@@ -61,7 +62,9 @@ struct type * expr_typecheck(struct expr *e) {
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
-            if (left_type->kind != TYPE_INTEGER || right_type->kind != TYPE_INTEGER) {
+        case EXPR_MOD:
+        case EXPR_EXP:
+            if (left_type && right_type && (left_type->kind != TYPE_INTEGER || right_type->kind != TYPE_INTEGER)) {
                 printf("Type Error: Cannot perform math on ");
                 type_print_name(left_type); printf(" and "); type_print_name(right_type); printf("\n");
                 type_error_count++;
@@ -69,10 +72,25 @@ struct type * expr_typecheck(struct expr *e) {
             result_type = type_create(TYPE_INTEGER, NULL);
             break;
 
+        /* Comparisons (>, <, ==, !=, <=, >=) return boolean */
+        case EXPR_EQUAL:
+        case EXPR_NOT_EQUAL:
+        case EXPR_LESS:
+        case EXPR_GREATER:
+        case EXPR_LESS_EQUAL:
+        case EXPR_GREATER_EQUAL:
+            if (left_type && right_type && !type_equals(left_type, right_type)) {
+                printf("Type Error: Cannot compare ");
+                type_print_name(left_type); printf(" with "); type_print_name(right_type); printf("\n");
+                type_error_count++;
+            }
+            result_type = type_create(TYPE_BOOLEAN, NULL);
+            break;
+
         /* Logic requires both sides to be boolean */
         case EXPR_AND:
         case EXPR_OR:
-            if (left_type->kind != TYPE_BOOLEAN || right_type->kind != TYPE_BOOLEAN) {
+            if (left_type && right_type && (left_type->kind != TYPE_BOOLEAN || right_type->kind != TYPE_BOOLEAN)) {
                 printf("Type Error: Logical operations require booleans.\n");
                 type_error_count++;
             }
@@ -81,12 +99,16 @@ struct type * expr_typecheck(struct expr *e) {
 
         /* Assignments (x = 5) require left and right to match exactly */
         case EXPR_ASSIGN:
-            if (!type_equals(left_type, right_type)) {
+            if (left_type && right_type && !type_equals(left_type, right_type)) {
                 printf("Type Error: Cannot assign ");
                 type_print_name(right_type); printf(" to variable of type "); type_print_name(left_type); printf("\n");
                 type_error_count++;
             }
-            result_type = type_copy(left_type);
+            if (left_type) {
+                result_type = type_copy(left_type);
+            } else {
+                result_type = type_create(TYPE_INTEGER, NULL);
+            }
             break;
             
         default:
@@ -106,7 +128,7 @@ void decl_typecheck(struct decl *d) {
     
     if (d->value) {
         struct type *val_type = expr_typecheck(d->value);
-        if (!type_equals(d->type, val_type)) {
+        if (d->type && val_type && !type_equals(d->type, val_type)) {
             printf("Type Error: Variable '%s' declared as ", d->name);
             type_print_name(d->type); printf(" but initialized with "); type_print_name(val_type); printf("\n");
             type_error_count++;
@@ -133,11 +155,11 @@ void stmt_typecheck(struct stmt *s) {
             break;
         case STMT_IF_ELSE: {
             struct type *cond_type = expr_typecheck(s->expr);
-            if (cond_type->kind != TYPE_BOOLEAN) {
+            if (cond_type && cond_type->kind != TYPE_BOOLEAN) {
                 printf("Type Error: 'if' condition must be a boolean.\n");
                 type_error_count++;
             }
-            free(cond_type);
+            if(cond_type) free(cond_type);
             stmt_typecheck(s->body);
             stmt_typecheck(s->else_body);
             break;

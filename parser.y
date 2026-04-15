@@ -6,6 +6,8 @@
 #include "scope.h"
 #include "resolve.h"
 #include "typecheck.h"
+#include "ir.h"
+#include "codegen.h"
 
 extern int yylex();
 extern int line_num;
@@ -150,6 +152,8 @@ expr:
     | expr TOKEN_INEQUALITY expr { $$ = expr_create(EXPR_NOT_EQUAL, $1, $3); }
     | expr '<' expr { $$ = expr_create(EXPR_LESS, $1, $3); }
     | expr '>' expr { $$ = expr_create(EXPR_GREATER, $1, $3); }
+    | expr TOKEN_LESS_EQUAL expr { $$ = expr_create(EXPR_LESS_EQUAL, $1, $3); }
+    | expr TOKEN_GREATER_EQUAL expr { $$ = expr_create(EXPR_GREATER_EQUAL, $1, $3); }
     | expr TOKEN_LOGICAL_AND expr { $$ = expr_create(EXPR_AND, $1, $3); }
     | expr TOKEN_LOGICAL_OR expr { $$ = expr_create(EXPR_OR, $1, $3); }
     | TOKEN_IDENTIFIER '=' expr { 
@@ -195,17 +199,54 @@ int main(int argc, char **argv) {
             stmt_typecheck(parser_result);
             
             if (type_error_count == 0) {
-                printf("\n--- TYPE CHECK SUCCESSFUL ---\n");
+                printf("\n--- TYPE CHECK SUCCESSFUL ---\n\n");
+                
+                /* PHASE 5: Intermediate Representation (3AC) */
+                printf("=== STARTING INTERMEDIATE REPRESENTATION (3AC) ===\n");
+                stmt_codegen(parser_result);
+                printf("==================================================\n\n");
+                
+                /* PHASE 6: Code Generation (x86-64) */
+                printf("=== STARTING X86-64 CODE GENERATION ===\n");
+                
+                /* Open the output file */
+                outfile = fopen("output.s", "w");
+                if (!outfile) {
+                    fprintf(stderr, "Error: Could not open output.s for writing.\n");
+                    return 1;
+                }
+                
+                /* Generate Global Variables */
+               
+                codegen_globals(parser_result);
+                
+                /* Write the standard main() preamble for Linux x86-64 */
+                fprintf(outfile, ".text\n");
+                fprintf(outfile, ".global main\n");
+                fprintf(outfile, "main:\n");
+                fprintf(outfile, "    pushq %%rbp\n");
+                fprintf(outfile, "    movq %%rsp, %%rbp\n\n");
+                
+                /* Generate the actual x86 assembly instructions (To be added!) */
+                stmt_codegen_x86(parser_result);
+                
+                /* Write the standard main() epilogue */
+                fprintf(outfile, "\n    movq $0, %%rax\n"); /* Return 0 */
+                fprintf(outfile, "    popq %%rbp\n");
+                fprintf(outfile, "    ret\n");
+                
+                fclose(outfile);
+                printf("SUCCESS: Assembly code written to 'output.s'\n");
+                printf("==================================================\n");
+                
             } else {
                 printf("\n--- TYPE CHECK FAILED WITH %d ERRORS ---\n", type_error_count);
             }
-            
         } else {
             printf("\n--- RESOLUTION FAILED WITH %d ERRORS ---\n", resolve_error_count);
         }
     } else {
-        /* If parsing fails, it NEVER runs resolve or typecheck! */
-        printf("--- PARSE FAILED ---\n"); 
+        printf("--- PARSE FAILED ---\n");
     }
     
     return 0;

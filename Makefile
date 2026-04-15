@@ -6,8 +6,8 @@ CFLAGS = -Wall
 all: bminor
 
 # ast.c is now included in the compilation!
-bminor: parser.tab.c lex.yy.c ast.c symbol.c scope.c resolve.c typecheck.c
-	$(CC) $(CFLAGS) parser.tab.c lex.yy.c ast.c symbol.c scope.c resolve.c typecheck.c -o bminor
+bminor: parser.tab.c lex.yy.c ast.c symbol.c scope.c resolve.c typecheck.c ir.c codegen.c
+	$(CC) $(CFLAGS) parser.tab.c lex.yy.c ast.c symbol.c scope.c resolve.c typecheck.c ir.c codegen.c -o bminor
 
 parser.tab.c parser.tab.h: parser.y
 	$(BISON) -d parser.y
